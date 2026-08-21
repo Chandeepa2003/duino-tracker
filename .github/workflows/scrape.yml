@@ -30,9 +30,11 @@ jobs:
 
       - name: Run Scraper
         run: python scraper.py
+        continue-on-error: true  # Don't fail the whole workflow if scraper has issues
 
       - name: Generate Report
         run: python report.py
+        continue-on-error: true  # Generate report even with partial data
 
       - name: Commit and Push changes
         run: |

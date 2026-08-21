@@ -22,6 +22,12 @@ MAX_DELAY = 3.0               # maximum seconds between requests
 MAX_RETRIES = 2                # retry count per product on failure
 CART_QUANTITY = 9999           # quantity to attempt adding to cart
 
+# ─── Batching (for GitHub Actions) ──────────────────────────────────
+BATCH_COUNT = 5               # split all products into N daily batches
+                              # ~1080 products per batch ≈ 45-60 min runtime
+SITEMAP_RETRIES = 3           # retry count for sitemap fetch
+SITEMAP_RETRY_DELAY = 10      # seconds between sitemap retries
+
 # ─── User-Agent Rotation Pool ───────────────────────────────────────
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
