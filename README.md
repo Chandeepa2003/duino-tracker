@@ -1,51 +1,61 @@
-# Duino.lk Inventory Velocity Tracker
+# Duino.lk Inventory Velocity Tracker 📊
 
-Automatically tracks the **exact stock levels** of every product on [duino.lk](https://www.duino.lk/) and identifies the fastest-moving items.
+Automated stock level tracker for [duino.lk](https://www.duino.lk). Scrapes exact stock counts for all products using WooCommerce cart validation, tracks inventory changes over time, and generates velocity reports.
 
 ## How It Works
 
-1. **Product Discovery**: The sitemap parser fetches `product-sitemap.xml` to discover all ~5,400 product URLs.
-2. **Stock Extraction**: For each product, the script sends a hidden POST request attempting to add 9,999 units to the cart. WooCommerce rejects this and reveals the exact remaining stock (e.g., *"271 remaining"*).
-3. **Data Logging**: Stock levels are appended to `data/inventory_log.csv` with a timestamp.
-4. **Velocity Analysis**: After 2+ days of data, the report script calculates how many units each product sold and ranks them.
+1. **Sitemap Parsing** — Fetches all product URLs from the WooCommerce sitemap
+2. **Stock Checking** — For each product, attempts to add 9999 units to cart. The error message reveals the exact stock count (e.g. "only 42 remaining")
+3. **Batching** — Products are split into 5 daily batches (~1080 each) to stay within CI time limits
+4. **Reporting** — Compares stock levels across scan dates to calculate sales velocity
 
-## Usage
+## GitHub Actions (Automated)
 
-### Run Locally (One-Time)
+Runs daily at **5:30 AM Sri Lanka time** via GitHub Actions. Uses `cloudscraper` to bypass Cloudflare protection from datacenter IPs.
+
+Each day processes a different batch (1/5 of all products). Full catalog coverage every 5 days.
+
+You can also trigger it manually from the **Actions** tab → **Duino.lk Stock Tracker** → **Run workflow**.
+
+## Local Usage
+
 ```bash
-# Full scan (~90 minutes for 5,400 products)
-python scraper.py
+# Install dependencies
+pip install -r requirements.txt
 
-# Quick test (first 10 products only)
+# Test with 10 products
 python scraper.py --test
 
-# Custom limit
+# Scrape a specific number
 python scraper.py --limit 50
-```
 
-### View Report
-```bash
+# Scrape ALL products (no batching)
+python scraper.py --all
+
+# Default: uses daily batching (same as CI)
+python scraper.py
+
+# Generate velocity report
 python report.py
 ```
 
-### Automated (GitHub Actions)
-Push this repo to GitHub and the scraper will run automatically every day at 5:30 AM Sri Lanka time. Check the **Actions** tab to monitor runs.
+## Output
+
+- `data/inventory_log.csv` — Raw stock data (timestamp, product, stock count, status)
+- `data/velocity_report.txt` — Sales velocity analysis with top movers
 
 ## Project Structure
-```
-├── config.py             # Configuration constants
-├── sitemap_parser.py     # Product URL discovery
-├── stock_checker.py      # Stock extraction engine
-├── scraper.py            # Main orchestrator
-├── report.py             # Analytics & reports
-├── requirements.txt      # Python dependencies
-├── data/
-│   ├── inventory_log.csv # Stock data (auto-generated)
-│   └── velocity_report.txt
-└── .github/workflows/
-    └── scrape.yml        # GitHub Actions automation
-```
 
-## Requirements
-- Python 3.8+
-- `pip install -r requirements.txt`
+```
+duino_tracker/
+├── .github/workflows/scrape.yml   # GitHub Actions daily schedule
+├── config.py                       # All settings and constants
+├── sitemap_parser.py               # Fetches product URLs from sitemap
+├── stock_checker.py                # Checks exact stock via cart trick
+├── scraper.py                      # Main orchestrator with batching
+├── report.py                       # Velocity analytics and reporting
+├── requirements.txt                # Python dependencies
+└── data/                           # Output directory (auto-created)
+    ├── inventory_log.csv
+    └── velocity_report.txt
+```
